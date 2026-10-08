@@ -7,21 +7,47 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Darmwetter">
-<meta name="theme-color" content="#E8F3F2">
+<meta name="theme-color" id="theme-color" content="#E8F3F2">
 <link rel="apple-touch-icon" href="icon.png">
 <title>Darmwetter</title>
 <style>
+  /* Tagdesign */
   :root {
     --bg: #E8F3F2;
     --ink: #1F4A4F;
     --ink-soft: #2F6A70;
     --primary: #2F5D62;
     --primary-dark: #1F4A4F;
+    --on-primary: #FFFFFF;
     --card: #FFFFFF;
+    --card-press: #F2F8F7;
     --line: #C9DEDC;
+    --sel-bg: #DDEEEC;
+    --sel-line: #2F5D62;
+    --logo-line: #1F4A4F;
     --ok: #1B6E3A;
     --warn: #8A5A00;
     --err: #B3261E;
+    color-scheme: light;
+  }
+  /* Nachtdesign (19:00 bis 7:00 Uhr) */
+  :root.night {
+    --bg: #0E1E2E;
+    --ink: #DCE8EE;
+    --ink-soft: #93AEBD;
+    --primary: #2E6577;
+    --primary-dark: #245262;
+    --on-primary: #F2F8FA;
+    --card: #17293B;
+    --card-press: #1D3247;
+    --line: #26405A;
+    --sel-bg: #1F4258;
+    --sel-line: #6FB3C8;
+    --logo-line: #93AEBD;
+    --ok: #7BD3A0;
+    --warn: #E8C27A;
+    --err: #F2A099;
+    color-scheme: dark;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { margin: 0; background: var(--bg); color: var(--ink); }
@@ -35,18 +61,18 @@
 
   /* Start */
   .home { text-align: center; padding-top: 6vh; }
-  .home svg { width: 190px; height: auto; }
+  .home .logo svg { width: 190px; height: auto; }
   .home h1 { font-size: 38px; margin: 8px 0 4px; letter-spacing: -0.5px; }
   .home .sub { margin: 0 0 36px; color: var(--ink-soft); font-size: 17px; }
   .primary {
     display: block; width: 100%;
     padding: 22px 16px;
     font-size: 21px; font-weight: 650;
-    color: #fff; background: var(--primary);
+    color: var(--on-primary); background: var(--primary);
     border: 0; border-radius: 18px;
   }
   .primary:active { background: var(--primary-dark); }
-  .primary:disabled { opacity: 0.6; }
+  .primary:disabled { opacity: 0.45; }
   .meta { margin: 18px 0 0; font-size: 15px; color: var(--ink-soft); min-height: 20px; }
   .meta.warn { color: var(--warn); }
   .link {
@@ -56,36 +82,45 @@
 
   /* Fragen */
   .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; }
-  .back {
-    background: none; border: 0; padding: 10px 8px 10px 0;
-    font-size: 17px; color: var(--ink-soft);
-  }
+  .back { background: none; border: 0; padding: 10px 8px 10px 0; font-size: 17px; color: var(--ink-soft); }
   .count { font-size: 15px; color: var(--ink-soft); }
   .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin: 4px 0 20px; }
-  .bar div { height: 100%; background: var(--primary); border-radius: 3px; transition: width .2s; }
-  h2 { font-size: 26px; margin: 0 0 20px; line-height: 1.2; }
+  .bar div { height: 100%; background: var(--sel-line); border-radius: 3px; transition: width .2s; }
+  h2 { font-size: 26px; margin: 0 0 8px; line-height: 1.2; }
+  .qhint { margin: 0 0 16px; font-size: 15px; color: var(--ink-soft); min-height: 4px; }
   .grid { display: grid; gap: 10px; }
   .cols-1 { grid-template-columns: 1fr; }
   .cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .opt {
-    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
-    min-height: 76px; padding: 12px 8px;
+    position: relative;
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px;
+    min-height: 72px; padding: 12px 10px;
     background: var(--card); border: 2px solid var(--line); border-radius: 16px;
     text-align: center;
   }
-  .cols-1 .opt { flex-direction: row; justify-content: flex-start; gap: 14px; min-height: 64px; padding: 10px 16px; text-align: left; }
-  .opt:active { background: #F2F8F7; }
-  .opt.sel { border-color: var(--primary); background: #DDEEEC; }
-  .opt .l { font-size: 24px; font-weight: 700; line-height: 1; }
-  .opt .d { font-size: 13px; color: var(--ink-soft); line-height: 1.25; }
-  .opt.text .l { font-size: 18px; font-weight: 600; }
-  .cols-1 .opt .l { min-width: 28px; text-align: center; }
-  .cols-1 .opt .d { font-size: 15px; color: var(--ink); }
-  .swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid rgba(0,0,0,.12); }
+  .opt:active { background: var(--card-press); }
+  .opt.sel { border-color: var(--sel-line); background: var(--sel-bg); }
+  .opt .txt { display: flex; flex-direction: column; gap: 2px; }
+  .opt .l { font-size: 18px; font-weight: 600; line-height: 1.2; }
+  .opt .d { font-size: 13px; color: var(--ink-soft); }
+  .cols-1 .opt { flex-direction: row; justify-content: flex-start; gap: 14px; min-height: 76px; padding: 8px 14px; text-align: left; }
+  .cols-3 .opt { padding: 12px 4px; }
+  .cols-3 .opt .l { font-size: 16px; }
+  .opt.multi { padding-left: 28px; padding-right: 28px; }
+  .multi .check { top: 6px; right: 6px; width: 20px; height: 20px; font-size: 12px; line-height: 16px; }
+  .pic svg { width: 104px; height: 60px; display: block; }
+  .swatch { width: 34px; height: 34px; border-radius: 50%; border: 2px solid rgba(127,127,127,.35); flex: none; }
+  .check {
+    position: absolute; top: 8px; right: 10px;
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2px solid var(--line); font-size: 14px; line-height: 18px; text-align: center; color: transparent;
+  }
+  .opt.sel .check { background: var(--sel-line); border-color: var(--sel-line); color: var(--bg); }
+  .next { margin-top: 20px; }
 
   /* Übersicht */
-  .when { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .when { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin: 12px 0 16px; }
   .when label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--ink-soft); }
   input {
     font: inherit; font-size: 17px; color: var(--ink);
@@ -100,8 +135,9 @@
   }
   .row:last-child { border-bottom: 0; }
   .row .k { color: var(--ink-soft); font-size: 15px; white-space: nowrap; }
-  .row .v { font-weight: 600; font-size: 15px; text-align: right; }
+  .row .v { font-weight: 600; font-size: 15px; text-align: right; display: flex; align-items: center; gap: 8px; justify-content: flex-end; }
   .row .v.missing { color: var(--err); }
+  .row .swatch { width: 18px; height: 18px; }
   .hint { font-size: 14px; color: var(--ink-soft); margin: -8px 0 16px; }
 
   /* Fertig */
@@ -109,7 +145,7 @@
   .done .icon { font-size: 64px; line-height: 1; margin-bottom: 12px; }
   .done h2 { margin-bottom: 10px; }
   .done p { color: var(--ink-soft); margin: 0 0 32px; font-size: 17px; }
-  .done.ok h2 { color: var(--ok); }
+  .done.ok h2, .done.ok .icon { color: var(--ok); }
   .done.warn h2 { color: var(--warn); }
 
   /* Einstellungen */
@@ -123,50 +159,140 @@
 
 <script>
 // ------------------------------------------------------------------
-// Fragen. Die Reihenfolge der Spalten im Google Sheet steht weiter
-// unten in buildRow().
+// Tag- und Nachtdesign: von 19:00 bis 7:00 Uhr dunkel
 // ------------------------------------------------------------------
-function scale(from, descriptions) {
-  return descriptions.map((d, i) => ({ v: from + i, l: String(from + i), d: d }));
+const NIGHT_FROM = 19;
+const NIGHT_UNTIL = 7;
+function applyTheme() {
+  const h = new Date().getHours();
+  const night = h >= NIGHT_FROM || h < NIGHT_UNTIL;
+  document.documentElement.classList.toggle('night', night);
+  document.getElementById('theme-color').setAttribute('content', night ? '#0E1E2E' : '#E8F3F2');
 }
-function texts(list) {
-  return list.map(x => (typeof x === 'string' ? { v: x, l: x } : x));
+applyTheme();
+setInterval(applyTheme, 60000);
+
+// ------------------------------------------------------------------
+// Bilder für die Bristol-Typen
+// ------------------------------------------------------------------
+const BR = '#8B5E3C', BR_LIGHT = '#A9743F', BR_DARK = '#4A2E1C';
+
+function eye(cx, cy, r, mood) {
+  if (mood === 'happy') {
+    return `<path d="M${cx - r} ${cy + r * 0.3} Q${cx} ${cy - r} ${cx + r} ${cy + r * 0.3}" fill="none" stroke="${BR_DARK}" stroke-width="2.6" stroke-linecap="round"/>`;
+  }
+  const py = mood === 'strain' ? cy - r * 0.35 : cy + r * 0.2;
+  let s = `<circle cx="${cx}" cy="${cy}" r="${r}" fill="#fff" stroke="${BR_DARK}" stroke-width="1.6"/>`
+        + `<circle cx="${cx}" cy="${py}" r="${r * 0.48}" fill="${BR_DARK}"/>`;
+  if (mood === 'tired') {
+    s += `<path d="M${cx - r - 0.8} ${cy} A${r + 0.8} ${r + 0.8} 0 0 1 ${cx + r + 0.8} ${cy} Z" fill="${BR}" stroke="${BR_DARK}" stroke-width="1.6"/>`;
+  }
+  return s;
 }
-const YES_NO = [{ v: 0, l: 'Nein' }, { v: 1, l: 'Ja' }];
-const COLORS = {
-  'Braun': '#7B4A26',
-  'Hellbraun': '#B07A45',
-  'Gelb': '#D9B23A',
-  'Grün': '#6E8B3D',
-  'Dunkel/Schwarz': '#2B2420',
-  'Rötlich': '#A8463A'
+function eyes(x1, x2, y, r, mood) { return eye(x1, y, r, mood) + eye(x2, y, r, mood); }
+function blobs(circles, fill) {
+  const out = circles.map(c => `<circle cx="${c[0]}" cy="${c[1]}" r="${c[2] + 2}"/>`).join('');
+  const inn = circles.map(c => `<circle cx="${c[0]}" cy="${c[1]}" r="${c[2]}"/>`).join('');
+  return `<g fill="${BR_DARK}">${out}</g><g fill="${fill}">${inn}</g>`;
+}
+function svg(body) {
+  return `<svg viewBox="0 0 120 70" aria-hidden="true">${body}</svg>`;
+}
+
+const BRISTOL_PICS = {
+  1: svg(
+    `<g fill="${BR}" stroke="${BR_DARK}" stroke-width="2">`
+    + `<circle cx="30" cy="40" r="16"/><circle cx="64" cy="48" r="13"/><circle cx="92" cy="30" r="10"/></g>`
+    + eyes(24, 37, 35, 5, 'strain')
+    + `<path d="M24 47 L36 47" stroke="${BR_DARK}" stroke-width="2" stroke-linecap="round"/>`
+  ),
+  2: svg(
+    blobs([[24, 42, 13], [40, 34, 14], [58, 40, 15], [76, 33, 14], [94, 41, 13], [50, 50, 10], [82, 50, 10]], BR)
+    + eyes(52, 66, 34, 5, 'normal')
+  ),
+  3: svg(
+    `<rect x="12" y="22" width="96" height="32" rx="16" fill="${BR}" stroke="${BR_DARK}" stroke-width="2"/>`
+    + `<g fill="none" stroke="${BR_DARK}" stroke-width="1.6" stroke-linecap="round">`
+    + `<path d="M24 26 L28 34 L24 40"/><path d="M38 50 L42 44 L46 50"/><path d="M84 25 L80 32 L86 37"/>`
+    + `<path d="M96 48 L92 42"/><path d="M30 48 L34 44"/><path d="M76 50 L80 45"/></g>`
+    + eyes(54, 68, 34, 5.5, 'normal')
+  ),
+  4: svg(
+    `<path d="M12 44 C14 30 34 26 60 27 C86 28 106 32 108 42 C110 52 98 54 84 52 C64 49 42 52 26 55 C14 57 10 52 12 44 Z" fill="${BR}" stroke="${BR_DARK}" stroke-width="2"/>`
+    + eyes(46, 60, 37, 5, 'happy')
+    + `<path d="M47 45 Q53 51 59 45" fill="none" stroke="${BR_DARK}" stroke-width="2.2" stroke-linecap="round"/>`
+    + `<circle cx="41" cy="44" r="3" fill="#F7B7A8" opacity=".8"/><circle cx="65" cy="44" r="3" fill="#F7B7A8" opacity=".8"/>`
+    + `<path d="M102 8 L104 14 L110 16 L104 18 L102 24 L100 18 L94 16 L100 14 Z" fill="#F6B73C"/>`
+    + `<path d="M14 14 L15.2 17.8 L19 19 L15.2 20.2 L14 24 L12.8 20.2 L9 19 L12.8 17.8 Z" fill="#F6B73C"/>`
+  ),
+  5: svg(
+    `<g fill="${BR}" stroke="${BR_DARK}" stroke-width="2">`
+    + `<ellipse cx="26" cy="46" rx="15" ry="10" transform="rotate(-12 26 46)"/>`
+    + `<ellipse cx="54" cy="28" rx="15" ry="11" transform="rotate(8 54 28)"/>`
+    + `<ellipse cx="64" cy="54" rx="14" ry="9" transform="rotate(-6 64 54)"/>`
+    + `<ellipse cx="94" cy="40" rx="15" ry="10" transform="rotate(14 94 40)"/></g>`
+    + eyes(48, 60, 27, 4.5, 'normal')
+  ),
+  6: svg(
+    blobs([[18, 40, 8], [27, 34, 9], [36, 44, 9], [44, 33, 10], [54, 42, 11], [64, 32, 10], [72, 44, 10],
+           [82, 35, 9], [90, 44, 8], [99, 37, 8], [106, 44, 6], [30, 50, 6], [60, 52, 7], [86, 51, 6], [12, 46, 5]], BR)
+    + eyes(52, 66, 38, 5, 'tired')
+  ),
+  7: svg(
+    `<path d="M10 44 C12 32 36 29 58 32 C80 29 108 33 108 45 C108 55 88 59 66 56 C44 61 12 59 10 44 Z" fill="${BR_LIGHT}" stroke="${BR_DARK}" stroke-width="2"/>`
+    + `<ellipse cx="18" cy="62" rx="6" ry="3" fill="${BR_LIGHT}" stroke="${BR_DARK}" stroke-width="1.5"/>`
+    + `<ellipse cx="104" cy="24" rx="4" ry="2.5" fill="${BR_LIGHT}" stroke="${BR_DARK}" stroke-width="1.5"/>`
+    + eye(52, 42, 5, 'tired').replace(new RegExp(BR, 'g'), BR_LIGHT)
+    + eye(66, 42, 5, 'tired').replace(new RegExp(BR, 'g'), BR_LIGHT)
+    + `<path d="M54 52 Q59 48 64 52" fill="none" stroke="${BR_DARK}" stroke-width="2" stroke-linecap="round"/>`
+  )
 };
 
+// ------------------------------------------------------------------
+// Fragen. In der App steht nur Text, ins Sheet geht der Wert "v".
+// Die Spaltenreihenfolge im Sheet steht weiter unten in buildRow().
+// ------------------------------------------------------------------
+function scale(from, labels) {
+  return labels.map((l, i) => ({ v: from + i, l: l }));
+}
+const YES_NO = [{ v: 0, l: 'Nein' }, { v: 1, l: 'Ja' }];
+const COLORS = [
+  ['Dunkelbraun', '#5A3418'],
+  ['Braun', '#7B4A26'],
+  ['Hellbraun', '#A8743F'],
+  ['Ocker', '#C8912E'],
+  ['Gelb', '#DDB93C'],
+  ['Grün', '#6E8B3D'],
+  ['Schwarz', '#2B2420'],
+  ['Rötlich', '#B5523F'],
+  ['Dunkelrot', '#7A1F1F']
+];
+
 const QUESTIONS = [
-  { key: 'menge', short: 'Menge', title: 'Wie viel war es?', cols: 3,
+  { key: 'menge', short: 'Menge', title: 'Wie viel war es?', cols: 2,
     options: scale(0, ['nichts', 'sehr wenig', 'wenig', 'normal', 'viel', 'sehr viel']) },
-  { key: 'flatulenz', short: 'Flatulenz', title: 'Wie viel Luft war dabei?', cols: 3,
+  { key: 'flatulenz', short: 'Flatulenz', title: 'Wie viel Luft war dabei?', cols: 2,
     options: scale(0, ['keine', 'sehr wenig', 'wenig', 'mittel', 'viel', 'sehr viel']) },
-  { key: 'farbe', short: 'Farbe', title: 'Welche Farbe?', cols: 2,
-    options: Object.keys(COLORS).map(c => ({ v: c, l: c, swatch: COLORS[c] })) },
-  { key: 'bristol', short: 'Bristol-Typ', title: 'Welcher Bristol-Typ?', cols: 1,
-    options: scale(1, [
-      'einzelne harte Kügelchen',
-      'wurstförmig, aber klumpig',
-      'wurstförmig, rissige Oberfläche',
-      'glatt und weich, wie eine Wurst',
-      'weiche Klümpchen mit klaren Rändern',
-      'breiig, ausgefranste Ränder',
-      'flüssig, ohne feste Bestandteile'
-    ]) },
+  { key: 'farbe', short: 'Farbe', title: 'Welche Farbe?', cols: 3,
+    options: COLORS.map(c => ({ v: c[1], l: c[0], swatch: c[1] })) },
+  { key: 'bristol', short: 'Bristol-Typ', title: 'Wie sah es aus?', cols: 1,
+    options: [
+      'harte Kügelchen',
+      'klumpige Wurst',
+      'rissige Wurst',
+      'glatte, weiche Wurst',
+      'weiche Klümpchen',
+      'breiig, ausgefranst',
+      'flüssig'
+    ].map((l, i) => ({ v: i + 1, l: l, d: 'Typ ' + (i + 1), img: BRISTOL_PICS[i + 1] })) },
   { key: 'blut', short: 'Blut', title: 'War Blut dabei?', cols: 2,
     options: scale(0, ['kein Blut', 'Spuren, Schlieren', 'deutlich sichtbar', 'überwiegend Blut']) },
-  { key: 'schmerz', short: 'Schmerzintensität', title: 'Hattest du Schmerzen?', cols: 3,
+  { key: 'schmerz', short: 'Schmerzen', title: 'Hattest du Schmerzen?', cols: 2,
     options: scale(0, ['keine', 'sehr leicht', 'leicht', 'mittel', 'stark', 'sehr stark']) },
-  { key: 'lage', short: 'Schmerzlage', title: 'Wo tut es weh?', cols: 2,
+  { key: 'lage', short: 'Schmerzlage', title: 'Wo tut es weh?', cols: 2, multi: true,
     skip: a => a.schmerz === 0,
-    options: texts(['links unten', 'rechts unten', 'Mitte unten', 'oben', 'diffus', 'Rektum/After']) },
-  { key: 'zeitpunkt', short: 'Schmerzzeitpunkt', title: 'Wann tut es weh?', cols: 2,
+    options: ['links unten', 'rechts unten', 'mitte unten', 'oben', 'diffus', 'Rektum/After'].map(x => ({ v: x, l: x.replace('/', '/<wbr>') })) },
+  { key: 'zeitpunkt', short: 'Schmerzzeitpunkt', title: 'Wann tut es weh?', cols: 2, multi: true,
     skip: a => a.schmerz === 0,
     options: [
       { v: 'vor', l: 'vorher' },
@@ -194,8 +320,8 @@ function buildRow(a, datum, uhrzeit) {
     datum, uhrzeit,
     a.menge, a.flatulenz, a.farbe, a.bristol, a.blut,
     a.schmerz,
-    keinSchmerz ? '' : a.lage,
-    keinSchmerz ? '' : a.zeitpunkt,
+    keinSchmerz ? '' : a.lage.join(', '),
+    keinSchmerz ? '' : a.zeitpunkt.join(', '),
     a.schleim, a.dringlichkeit, a.inkontinenz, a.tenesmus
   ];
 }
@@ -278,11 +404,17 @@ function isSkipped(i) {
 function activeIndices() {
   return QUESTIONS.map((_, i) => i).filter(i => !isSkipped(i));
 }
-function optionFor(q, value) {
-  return q.options.find(o => o.v === value);
+function isAnswered(q) {
+  const v = state.answers[q.key];
+  if (q.multi) return Array.isArray(v) && v.length > 0;
+  return v !== undefined;
 }
 function answerLabel(q, value) {
-  const o = optionFor(q, value);
+  if (q.multi) {
+    if (!Array.isArray(value) || !value.length) return null;
+    return q.options.filter(o => value.includes(o.v)).map(o => o.l).join(', ');
+  }
+  const o = q.options.find(o => o.v === value);
   if (!o) return null;
   return o.d ? o.l + ' · ' + o.d : o.l;
 }
@@ -307,7 +439,7 @@ const LOGO = `
 <circle cx="84" cy="116" r="4.5" fill="#1F4A4F"/><circle cx="116" cy="116" r="4.5" fill="#1F4A4F"/>
 <circle cx="73" cy="128" r="6" fill="#F7B7A8" opacity="0.8"/><circle cx="127" cy="128" r="6" fill="#F7B7A8" opacity="0.8"/>
 <path d="M90 128 Q100 142 110 128" fill="none" stroke="#1F4A4F" stroke-width="4.5" stroke-linecap="round"/>
-<g fill="none" stroke="#1F4A4F" stroke-width="4" stroke-linecap="round">
+<g fill="none" stroke-width="4" stroke-linecap="round" style="stroke: var(--logo-line)">
 <path d="M30 112 Q24 122 30 132"/><path d="M21 106 Q11 122 21 138"/>
 </g>
 <path d="M0 -9 C6 -1 7 4 7 6 A7 7 0 0 1 -7 6 C-7 4 -6 -1 0 -9 Z" transform="translate(74 172)" fill="#7CC3D9"/>
@@ -331,7 +463,7 @@ function viewHome() {
   }
   return `
   <div class="home">
-    ${LOGO}
+    <div class="logo">${LOGO}</div>
     <h1>Darmwetter</h1>
     <p class="sub">Wie ist das Wetter im Bauch?</p>
     <button class="primary" data-act="start">Ich war grad</button>
@@ -348,12 +480,18 @@ function viewQuestion() {
   const pct = Math.round((pos - 1) / active.length * 100);
   const current = state.answers[q.key];
   const opts = q.options.map((o, idx) => {
-    const sel = o.v === current ? ' sel' : '';
-    const textCls = typeof o.v === 'string' || q.options === YES_NO ? ' text' : '';
+    const selected = q.multi ? (Array.isArray(current) && current.includes(o.v)) : o.v === current;
     const sw = o.swatch ? `<span class="swatch" style="background:${o.swatch}"></span>` : '';
+    const pic = o.img ? `<span class="pic">${o.img}</span>` : '';
     const d = o.d ? `<span class="d">${o.d}</span>` : '';
-    return `<button class="opt${sel}${textCls}" data-act="pick" data-i="${idx}">${sw}<span class="l">${o.l}</span>${d}</button>`;
+    const check = q.multi ? '<span class="check">✓</span>' : '';
+    return `<button class="opt${q.multi ? ' multi' : ''}${selected ? ' sel' : ''}" data-act="${q.multi ? 'toggle' : 'pick'}" data-i="${idx}" aria-pressed="${selected}">`
+      + `${check}${sw}${pic}<span class="txt"><span class="l">${o.l}</span>${d}</span></button>`;
   }).join('');
+  const hint = q.multi ? 'Mehrfachauswahl möglich' : '';
+  const next = q.multi
+    ? `<button class="primary next" data-act="next"${isAnswered(q) ? '' : ' disabled'}>Weiter</button>`
+    : '';
   return `
   <div class="top">
     <button class="back" data-act="back">‹ Zurück</button>
@@ -361,14 +499,18 @@ function viewQuestion() {
   </div>
   <div class="bar"><div style="width:${pct}%"></div></div>
   <h2>${q.title}</h2>
-  <div class="grid cols-${q.cols}">${opts}</div>`;
+  <p class="qhint">${hint}</p>
+  <div class="grid cols-${q.cols}">${opts}</div>
+  ${next}`;
 }
 
 function viewSummary() {
   const rows = QUESTIONS.map((q, i) => {
     if (isSkipped(i)) return '';
-    const label = answerLabel(q, state.answers[q.key]);
-    const v = label === null ? '<span class="v missing">fehlt</span>' : `<span class="v">${label}</span>`;
+    const value = state.answers[q.key];
+    const label = answerLabel(q, value);
+    const sw = q.key === 'farbe' && label ? `<span class="swatch" style="background:${value}"></span>` : '';
+    const v = label === null ? '<span class="v missing">fehlt</span>' : `<span class="v">${sw}${label}</span>`;
     return `<button class="row" data-act="edit" data-i="${i}"><span class="k">${q.short}</span>${v}</button>`;
   }).join('');
   return `
@@ -422,6 +564,7 @@ function viewSettings() {
     <span class="count">Einstellungen</span>
   </div>
   <h2>Verbindung zum Google Sheet</h2>
+  <p class="qhint"></p>
   <label class="field">Web-App-URL (endet auf /exec)
     <input type="url" id="s-url" value="${url}" autocapitalize="off" autocorrect="off" spellcheck="false">
   </label>
@@ -434,11 +577,12 @@ function viewSettings() {
   ${q > 0 ? '<div style="text-align:center"><button class="link" data-act="flush">Jetzt senden</button></div>' : ''}`;
 }
 
-function render() {
+function render(keepScroll) {
+  const y = window.scrollY;
   const app = document.getElementById('app');
   const views = { home: viewHome, question: viewQuestion, summary: viewSummary, done: viewDone, settings: viewSettings };
   app.innerHTML = views[state.screen]();
-  window.scrollTo(0, 0);
+  window.scrollTo(0, keepScroll ? y : 0);
 }
 
 // ------------------------------------------------------------------
@@ -447,7 +591,7 @@ function render() {
 function goNext() {
   for (let i = state.step + 1; i < QUESTIONS.length; i++) {
     if (isSkipped(i)) continue;
-    if (state.editing && state.answers[QUESTIONS[i].key] !== undefined) continue;
+    if (state.editing && isAnswered(QUESTIONS[i])) continue;
     state.step = i;
     state.screen = 'question';
     return render();
@@ -484,7 +628,7 @@ function readWhen() {
 
 async function save(btn) {
   readWhen();
-  const missing = activeIndices().filter(i => state.answers[QUESTIONS[i].key] === undefined);
+  const missing = activeIndices().filter(i => !isAnswered(QUESTIONS[i]));
   if (missing.length) {
     state.step = missing[0];
     state.editing = true;
@@ -511,14 +655,25 @@ document.getElementById('app').addEventListener('click', async (ev) => {
   const act = el.dataset.act;
 
   if (act === 'start') {
+    applyTheme();
     state = { screen: 'question', answers: {}, step: 0, editing: false, when: nowParts(), result: null };
     render();
   } else if (act === 'pick') {
     const q = QUESTIONS[state.step];
-    const opt = q.options[Number(el.dataset.i)];
-    state.answers[q.key] = opt.v;
+    state.answers[q.key] = q.options[Number(el.dataset.i)].v;
     el.classList.add('sel');
     setTimeout(goNext, 120);
+  } else if (act === 'toggle') {
+    const q = QUESTIONS[state.step];
+    const v = q.options[Number(el.dataset.i)].v;
+    const list = Array.isArray(state.answers[q.key]) ? state.answers[q.key].slice() : [];
+    const at = list.indexOf(v);
+    if (at >= 0) list.splice(at, 1); else list.push(v);
+    // Reihenfolge wie in der Liste, nicht wie angeklickt
+    state.answers[q.key] = q.options.map(o => o.v).filter(x => list.includes(x));
+    render(true);
+  } else if (act === 'next') {
+    goNext();
   } else if (act === 'back') {
     if (state.screen === 'summary') readWhen();
     goBack();
@@ -553,7 +708,12 @@ document.getElementById('app').addEventListener('click', async (ev) => {
     msg.textContent = 'Gespeichert.';
     if (getQueue().length) {
       const r = await flushQueue();
-      if (r.ok) { render(); document.getElementById('s-msg').className = 'msg ok'; document.getElementById('s-msg').textContent = 'Gespeichert, Warteschlange gesendet.'; }
+      if (r.ok) {
+        render();
+        const m = document.getElementById('s-msg');
+        m.className = 'msg ok';
+        m.textContent = 'Gespeichert, Warteschlange gesendet.';
+      }
     }
   } else if (act === 'flush') {
     el.disabled = true;
@@ -575,7 +735,10 @@ async function backgroundFlush() {
 }
 window.addEventListener('online', backgroundFlush);
 document.addEventListener('visibilitychange', () => {
-  if (document.visibilityState === 'visible') backgroundFlush();
+  if (document.visibilityState === 'visible') {
+    applyTheme();
+    backgroundFlush();
+  }
 });
 
 render();
