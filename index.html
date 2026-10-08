@@ -4,117 +4,582 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="Darmwetter">
+<meta name="theme-color" content="#E8F3F2">
+<link rel="apple-touch-icon" href="icon.png">
 <title>Darmwetter</title>
 <style>
+  :root {
+    --bg: #E8F3F2;
+    --ink: #1F4A4F;
+    --ink-soft: #2F6A70;
+    --primary: #2F5D62;
+    --primary-dark: #1F4A4F;
+    --card: #FFFFFF;
+    --line: #C9DEDC;
+    --ok: #1B6E3A;
+    --warn: #8A5A00;
+    --err: #B3261E;
+  }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; background: var(--bg); color: var(--ink); }
   body {
-    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
     min-height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    background: #E8F3F2;
-    color: #1F4A4F;
-    font-family: -apple-system, "Helvetica Neue", sans-serif;
+    padding: env(safe-area-inset-top) 16px env(safe-area-inset-bottom);
   }
-  main { text-align: center; padding: 24px; width: 100%; max-width: 420px; box-sizing: border-box; }
-  h1 { font-size: 36px; margin: 0 0 8px; }
-  p.sub { margin: 0 0 32px; color: #2F6A70; }
-  button.big {
-    width: 100%;
-    padding: 22px;
-    font-size: 20px;
-    font-weight: 600;
-    color: #fff;
-    background: #2F5D62;
-    border: 0;
-    border-radius: 18px;
+  #app { max-width: 480px; margin: 0 auto; padding: 16px 0 32px; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+
+  /* Start */
+  .home { text-align: center; padding-top: 6vh; }
+  .home svg { width: 190px; height: auto; }
+  .home h1 { font-size: 38px; margin: 8px 0 4px; letter-spacing: -0.5px; }
+  .home .sub { margin: 0 0 36px; color: var(--ink-soft); font-size: 17px; }
+  .primary {
+    display: block; width: 100%;
+    padding: 22px 16px;
+    font-size: 21px; font-weight: 650;
+    color: #fff; background: var(--primary);
+    border: 0; border-radius: 18px;
   }
-  button.big:active { background: #1F4A4F; }
-  button.link {
-    margin-top: 28px;
-    background: none;
-    border: 0;
-    color: #2F6A70;
-    font-size: 14px;
-    text-decoration: underline;
+  .primary:active { background: var(--primary-dark); }
+  .primary:disabled { opacity: 0.6; }
+  .meta { margin: 18px 0 0; font-size: 15px; color: var(--ink-soft); min-height: 20px; }
+  .meta.warn { color: var(--warn); }
+  .link {
+    background: none; border: 0; padding: 12px;
+    color: var(--ink-soft); font-size: 15px; text-decoration: underline;
   }
-  #status { min-height: 48px; margin-top: 20px; font-size: 16px; }
-  .ok { color: #1B6E3A; }
-  .err { color: #B3261E; }
+
+  /* Fragen */
+  .top { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 48px; }
+  .back {
+    background: none; border: 0; padding: 10px 8px 10px 0;
+    font-size: 17px; color: var(--ink-soft);
+  }
+  .count { font-size: 15px; color: var(--ink-soft); }
+  .bar { height: 6px; background: var(--line); border-radius: 3px; overflow: hidden; margin: 4px 0 20px; }
+  .bar div { height: 100%; background: var(--primary); border-radius: 3px; transition: width .2s; }
+  h2 { font-size: 26px; margin: 0 0 20px; line-height: 1.2; }
+  .grid { display: grid; gap: 10px; }
+  .cols-1 { grid-template-columns: 1fr; }
+  .cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+  .opt {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px;
+    min-height: 76px; padding: 12px 8px;
+    background: var(--card); border: 2px solid var(--line); border-radius: 16px;
+    text-align: center;
+  }
+  .cols-1 .opt { flex-direction: row; justify-content: flex-start; gap: 14px; min-height: 64px; padding: 10px 16px; text-align: left; }
+  .opt:active { background: #F2F8F7; }
+  .opt.sel { border-color: var(--primary); background: #DDEEEC; }
+  .opt .l { font-size: 24px; font-weight: 700; line-height: 1; }
+  .opt .d { font-size: 13px; color: var(--ink-soft); line-height: 1.25; }
+  .opt.text .l { font-size: 18px; font-weight: 600; }
+  .cols-1 .opt .l { min-width: 28px; text-align: center; }
+  .cols-1 .opt .d { font-size: 15px; color: var(--ink); }
+  .swatch { width: 30px; height: 30px; border-radius: 50%; border: 2px solid rgba(0,0,0,.12); }
+
+  /* Übersicht */
+  .when { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; margin-bottom: 16px; }
+  .when label { display: flex; flex-direction: column; gap: 6px; font-size: 14px; color: var(--ink-soft); }
+  input {
+    font: inherit; font-size: 17px; color: var(--ink);
+    padding: 12px; min-height: 48px;
+    background: var(--card); border: 2px solid var(--line); border-radius: 12px; width: 100%;
+  }
+  .list { background: var(--card); border-radius: 16px; overflow: hidden; margin-bottom: 20px; border: 2px solid var(--line); }
+  .row {
+    display: flex; justify-content: space-between; align-items: center; gap: 12px;
+    width: 100%; padding: 13px 16px; min-height: 48px;
+    background: none; border: 0; border-bottom: 1px solid var(--line); text-align: left;
+  }
+  .row:last-child { border-bottom: 0; }
+  .row .k { color: var(--ink-soft); font-size: 15px; white-space: nowrap; }
+  .row .v { font-weight: 600; font-size: 15px; text-align: right; }
+  .row .v.missing { color: var(--err); }
+  .hint { font-size: 14px; color: var(--ink-soft); margin: -8px 0 16px; }
+
+  /* Fertig */
+  .done { text-align: center; padding-top: 14vh; }
+  .done .icon { font-size: 64px; line-height: 1; margin-bottom: 12px; }
+  .done h2 { margin-bottom: 10px; }
+  .done p { color: var(--ink-soft); margin: 0 0 32px; font-size: 17px; }
+  .done.ok h2 { color: var(--ok); }
+  .done.warn h2 { color: var(--warn); }
+
+  /* Einstellungen */
+  .field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; font-size: 15px; color: var(--ink-soft); }
+  .msg { min-height: 22px; margin: 12px 0; font-size: 15px; }
+  .msg.ok { color: var(--ok); } .msg.err { color: var(--err); }
 </style>
 </head>
 <body>
-<main>
-  <h1>Darmwetter</h1>
-  <p class="sub">Testversion: sendet eine Zeile an dein Google Sheet</p>
-  <button id="go" class="big">Testzeile senden</button>
-  <div id="status"></div>
-  <button id="reset" class="link">Zugangsdaten zurücksetzen</button>
-</main>
+<div id="app"></div>
 
 <script>
-// Holt die Web-App-URL und den Schlüssel aus dem Speicher des Handys.
-// Beim allerersten Start fragt die App einmal danach.
-function getCredentials() {
-  if (!localStorage.getItem('dw_url')) {
-    const url = prompt('Web-App-URL einfügen (endet auf /exec):');
-    if (!url) return null;
-    localStorage.setItem('dw_url', url.trim());
-  }
-  if (!localStorage.getItem('dw_token')) {
-    const token = prompt('Geheimen Schlüssel eingeben:');
-    if (!token) return null;
-    localStorage.setItem('dw_token', token.trim());
-  }
-  return {
-    url: localStorage.getItem('dw_url'),
-    token: localStorage.getItem('dw_token')
-  };
+// ------------------------------------------------------------------
+// Fragen. Die Reihenfolge der Spalten im Google Sheet steht weiter
+// unten in buildRow().
+// ------------------------------------------------------------------
+function scale(from, descriptions) {
+  return descriptions.map((d, i) => ({ v: from + i, l: String(from + i), d: d }));
+}
+function texts(list) {
+  return list.map(x => (typeof x === 'string' ? { v: x, l: x } : x));
+}
+const YES_NO = [{ v: 0, l: 'Nein' }, { v: 1, l: 'Ja' }];
+const COLORS = {
+  'Braun': '#7B4A26',
+  'Hellbraun': '#B07A45',
+  'Gelb': '#D9B23A',
+  'Grün': '#6E8B3D',
+  'Dunkel/Schwarz': '#2B2420',
+  'Rötlich': '#A8463A'
+};
+
+const QUESTIONS = [
+  { key: 'menge', short: 'Menge', title: 'Wie viel war es?', cols: 3,
+    options: scale(0, ['nichts', 'sehr wenig', 'wenig', 'normal', 'viel', 'sehr viel']) },
+  { key: 'flatulenz', short: 'Flatulenz', title: 'Wie viel Luft war dabei?', cols: 3,
+    options: scale(0, ['keine', 'sehr wenig', 'wenig', 'mittel', 'viel', 'sehr viel']) },
+  { key: 'farbe', short: 'Farbe', title: 'Welche Farbe?', cols: 2,
+    options: Object.keys(COLORS).map(c => ({ v: c, l: c, swatch: COLORS[c] })) },
+  { key: 'bristol', short: 'Bristol-Typ', title: 'Welcher Bristol-Typ?', cols: 1,
+    options: scale(1, [
+      'einzelne harte Kügelchen',
+      'wurstförmig, aber klumpig',
+      'wurstförmig, rissige Oberfläche',
+      'glatt und weich, wie eine Wurst',
+      'weiche Klümpchen mit klaren Rändern',
+      'breiig, ausgefranste Ränder',
+      'flüssig, ohne feste Bestandteile'
+    ]) },
+  { key: 'blut', short: 'Blut', title: 'War Blut dabei?', cols: 2,
+    options: scale(0, ['kein Blut', 'Spuren, Schlieren', 'deutlich sichtbar', 'überwiegend Blut']) },
+  { key: 'schmerz', short: 'Schmerzintensität', title: 'Hattest du Schmerzen?', cols: 3,
+    options: scale(0, ['keine', 'sehr leicht', 'leicht', 'mittel', 'stark', 'sehr stark']) },
+  { key: 'lage', short: 'Schmerzlage', title: 'Wo tut es weh?', cols: 2,
+    skip: a => a.schmerz === 0,
+    options: texts(['links unten', 'rechts unten', 'Mitte unten', 'oben', 'diffus', 'Rektum/After']) },
+  { key: 'zeitpunkt', short: 'Schmerzzeitpunkt', title: 'Wann tut es weh?', cols: 2,
+    skip: a => a.schmerz === 0,
+    options: [
+      { v: 'vor', l: 'vorher' },
+      { v: 'während', l: 'währenddessen' },
+      { v: 'nach', l: 'danach' },
+      { v: 'unabhängig', l: 'unabhängig' }
+    ] },
+  { key: 'schleim', short: 'Schleim', title: 'War Schleim dabei?', cols: 3,
+    options: scale(0, ['kein', 'etwas', 'viel']) },
+  { key: 'dringlichkeit', short: 'Dringlichkeit', title: 'Wie dringend war es?', cols: 2,
+    options: scale(0, ['kein Drang', 'konnte kurz warten', 'musste sofort', 'kaum zu halten']) },
+  { key: 'inkontinenz', short: 'Inkontinenz', title: 'Ist etwas danebengegangen?', cols: 2,
+    options: YES_NO },
+  { key: 'tenesmus', short: 'Tenesmus', title: 'Gefühl, nicht fertig zu sein?', cols: 2,
+    options: YES_NO }
+];
+
+// Spaltenreihenfolge wie im Google Sheet:
+// Datum, Uhrzeit, Menge, Flatulenz, Farbe, Bristol-Typ, Blut,
+// Schmerzintensität, Schmerzlage, Schmerzzeitpunkt, Schleim,
+// Dringlichkeit, Inkontinenz, Tenesmus
+function buildRow(a, datum, uhrzeit) {
+  const keinSchmerz = a.schmerz === 0;
+  return [
+    datum, uhrzeit,
+    a.menge, a.flatulenz, a.farbe, a.bristol, a.blut,
+    a.schmerz,
+    keinSchmerz ? '' : a.lage,
+    keinSchmerz ? '' : a.zeitpunkt,
+    a.schleim, a.dringlichkeit, a.inkontinenz, a.tenesmus
+  ];
 }
 
-// Schickt eine Zeile (eine Liste von Werten) ans Google Sheet.
-async function sendRow(row) {
-  const c = getCredentials();
-  if (!c) throw new Error('Keine Zugangsdaten eingegeben.');
-  const response = await fetch(c.url, {
-    method: 'POST',
-    body: JSON.stringify({ token: c.token, row: row })
-  });
-  const text = await response.text();
-  if (text !== 'ok') throw new Error('Antwort vom Sheet: ' + text);
+// ------------------------------------------------------------------
+// Speicher auf dem Handy
+// ------------------------------------------------------------------
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } },
+  set(k, v) { try { localStorage.setItem(k, v); } catch (e) {} },
+  del(k) { try { localStorage.removeItem(k); } catch (e) {} }
+};
+function getQueue() {
+  try { return JSON.parse(store.get('dw_queue') || '[]'); } catch (e) { return []; }
 }
+function setQueue(q) { store.set('dw_queue', JSON.stringify(q)); }
+function hasCredentials() { return !!(store.get('dw_url') && store.get('dw_token')); }
+
+// ------------------------------------------------------------------
+// Senden ans Google Sheet (mit Warteschlange, falls offline)
+// ------------------------------------------------------------------
+async function sendRow(row) {
+  const url = store.get('dw_url');
+  const token = store.get('dw_token');
+  if (!url || !token) throw new Error('nocreds');
+  const ctrl = new AbortController();
+  const timer = setTimeout(() => ctrl.abort(), 15000);
+  try {
+    const res = await fetch(url, {
+      method: 'POST',
+      body: JSON.stringify({ token: token, row: row }),
+      signal: ctrl.signal
+    });
+    const text = (await res.text()).trim();
+    if (text === 'forbidden') throw new Error('forbidden');
+    if (text !== 'ok') throw new Error('Unerwartete Antwort: ' + text.slice(0, 80));
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+let flushing = false;
+async function flushQueue() {
+  if (flushing) return { ok: false, error: 'busy' };
+  flushing = true;
+  try {
+    let q = getQueue();
+    while (q.length) {
+      try {
+        await sendRow(q[0]);
+      } catch (e) {
+        return { ok: false, error: e.message };
+      }
+      q.shift();
+      setQueue(q);
+    }
+    return { ok: true };
+  } finally {
+    flushing = false;
+  }
+}
+
+// ------------------------------------------------------------------
+// Zustand und Bildschirme
+// ------------------------------------------------------------------
+let state = { screen: 'home', answers: {}, step: 0, editing: false, when: null, result: null };
 
 function pad(n) { return String(n).padStart(2, '0'); }
+function nowParts() {
+  const d = new Date();
+  return {
+    date: d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()),
+    time: pad(d.getHours()) + ':' + pad(d.getMinutes())
+  };
+}
+function isSkipped(i) {
+  const q = QUESTIONS[i];
+  return !!(q.skip && q.skip(state.answers));
+}
+function activeIndices() {
+  return QUESTIONS.map((_, i) => i).filter(i => !isSkipped(i));
+}
+function optionFor(q, value) {
+  return q.options.find(o => o.v === value);
+}
+function answerLabel(q, value) {
+  const o = optionFor(q, value);
+  if (!o) return null;
+  return o.d ? o.l + ' · ' + o.d : o.l;
+}
 
-const statusEl = document.getElementById('status');
+const LOGO = `
+<svg viewBox="0 0 220 190" role="img" aria-label="Darmwetter-Logo: lächelnde Wolke mit Sonne">
+<g stroke="#F6B73C" stroke-width="7" stroke-linecap="round" fill="none">
+<line x1="196" y1="58" x2="210" y2="58"/><line x1="184.9" y1="84.9" x2="194.8" y2="94.8"/>
+<line x1="158" y1="96" x2="158" y2="110"/><line x1="131.1" y1="84.9" x2="121.2" y2="94.8"/>
+<line x1="120" y1="58" x2="106" y2="58"/><line x1="131.1" y1="31.1" x2="121.2" y2="21.2"/>
+<line x1="158" y1="20" x2="158" y2="6"/><line x1="184.9" y1="31.1" x2="194.8" y2="21.2"/>
+</g>
+<circle cx="158" cy="58" r="28" fill="#F6B73C"/>
+<g fill="#1F4A4F" stroke="#1F4A4F" stroke-width="10" stroke-linejoin="round">
+<rect x="44" y="120" width="118" height="34" rx="17"/><circle cx="66" cy="118" r="26"/>
+<circle cx="100" cy="92" r="36"/><circle cx="138" cy="110" r="28"/>
+</g>
+<g fill="#FFFFFF">
+<rect x="44" y="120" width="118" height="34" rx="17"/><circle cx="66" cy="118" r="26"/>
+<circle cx="100" cy="92" r="36"/><circle cx="138" cy="110" r="28"/>
+</g>
+<circle cx="84" cy="116" r="4.5" fill="#1F4A4F"/><circle cx="116" cy="116" r="4.5" fill="#1F4A4F"/>
+<circle cx="73" cy="128" r="6" fill="#F7B7A8" opacity="0.8"/><circle cx="127" cy="128" r="6" fill="#F7B7A8" opacity="0.8"/>
+<path d="M90 128 Q100 142 110 128" fill="none" stroke="#1F4A4F" stroke-width="4.5" stroke-linecap="round"/>
+<g fill="none" stroke="#1F4A4F" stroke-width="4" stroke-linecap="round">
+<path d="M30 112 Q24 122 30 132"/><path d="M21 106 Q11 122 21 138"/>
+</g>
+<path d="M0 -9 C6 -1 7 4 7 6 A7 7 0 0 1 -7 6 C-7 4 -6 -1 0 -9 Z" transform="translate(74 172)" fill="#7CC3D9"/>
+<path d="M0 -9 C6 -1 7 4 7 6 A7 7 0 0 1 -7 6 C-7 4 -6 -1 0 -9 Z" transform="translate(100 178)" fill="#8B5E3C"/>
+<path d="M0 -9 C6 -1 7 4 7 6 A7 7 0 0 1 -7 6 C-7 4 -6 -1 0 -9 Z" transform="translate(126 172)" fill="#7CC3D9"/>
+</svg>`;
 
-document.getElementById('go').addEventListener('click', async () => {
-  const now = new Date();
-  const datum = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
-  const zeit = pad(now.getHours()) + ':' + pad(now.getMinutes());
-  statusEl.className = '';
-  statusEl.textContent = 'Sende ...';
-  try {
-    // Reihenfolge wie im Google Sheet:
-    // Datum, Uhrzeit, Menge, Flatulenz, Farbe, Bristol-Typ, Blut,
-    // Schmerzintensität, Schmerzlage, Schmerzzeitpunkt, Schleim,
-    // Dringlichkeit, Inkontinenz, Tenesmus
-    await sendRow([datum, zeit, 0, 0, 'TEST', 4, 0, 0, 'diffus', 'unabhängig', 0, 0, 0, 0]);
-    statusEl.className = 'ok';
-    statusEl.textContent = 'Gesendet. Schau ins Google Sheet.';
-  } catch (err) {
-    statusEl.className = 'err';
-    statusEl.textContent = 'Fehler: ' + err.message;
+function viewHome() {
+  const q = getQueue().length;
+  const last = store.get('dw_last');
+  let meta = '';
+  let cls = 'meta';
+  if (!hasCredentials()) {
+    meta = 'Noch keine Verbindung zum Google Sheet. Bitte unter Einstellungen eintragen.';
+    cls += ' warn';
+  } else if (q > 0) {
+    meta = q === 1 ? '1 Eintrag wartet auf Versand.' : q + ' Einträge warten auf Versand.';
+    cls += ' warn';
+  } else if (last) {
+    meta = 'Letzter Eintrag: ' + last;
+  }
+  return `
+  <div class="home">
+    ${LOGO}
+    <h1>Darmwetter</h1>
+    <p class="sub">Wie ist das Wetter im Bauch?</p>
+    <button class="primary" data-act="start">Ich war grad</button>
+    <p class="${cls}">${meta}</p>
+    <button class="link" data-act="settings">Einstellungen</button>
+  </div>`;
+}
+
+function viewQuestion() {
+  const i = state.step;
+  const q = QUESTIONS[i];
+  const active = activeIndices();
+  const pos = active.indexOf(i) + 1;
+  const pct = Math.round((pos - 1) / active.length * 100);
+  const current = state.answers[q.key];
+  const opts = q.options.map((o, idx) => {
+    const sel = o.v === current ? ' sel' : '';
+    const textCls = typeof o.v === 'string' || q.options === YES_NO ? ' text' : '';
+    const sw = o.swatch ? `<span class="swatch" style="background:${o.swatch}"></span>` : '';
+    const d = o.d ? `<span class="d">${o.d}</span>` : '';
+    return `<button class="opt${sel}${textCls}" data-act="pick" data-i="${idx}">${sw}<span class="l">${o.l}</span>${d}</button>`;
+  }).join('');
+  return `
+  <div class="top">
+    <button class="back" data-act="back">‹ Zurück</button>
+    <span class="count">${pos} / ${active.length}</span>
+  </div>
+  <div class="bar"><div style="width:${pct}%"></div></div>
+  <h2>${q.title}</h2>
+  <div class="grid cols-${q.cols}">${opts}</div>`;
+}
+
+function viewSummary() {
+  const rows = QUESTIONS.map((q, i) => {
+    if (isSkipped(i)) return '';
+    const label = answerLabel(q, state.answers[q.key]);
+    const v = label === null ? '<span class="v missing">fehlt</span>' : `<span class="v">${label}</span>`;
+    return `<button class="row" data-act="edit" data-i="${i}"><span class="k">${q.short}</span>${v}</button>`;
+  }).join('');
+  return `
+  <div class="top">
+    <button class="back" data-act="back">‹ Zurück</button>
+    <span class="count">Übersicht</span>
+  </div>
+  <div class="bar"><div style="width:100%"></div></div>
+  <h2>Alles richtig?</h2>
+  <div class="when">
+    <label>Datum<input type="date" id="f-date" value="${state.when.date}"></label>
+    <label>Uhrzeit<input type="time" id="f-time" value="${state.when.time}"></label>
+  </div>
+  <p class="hint">Tippe auf eine Zeile, um sie zu ändern.</p>
+  <div class="list">${rows}</div>
+  <button class="primary" data-act="save" id="save-btn">Speichern</button>
+  <div style="text-align:center"><button class="link" data-act="cancel">Verwerfen</button></div>`;
+}
+
+function viewDone() {
+  const r = state.result;
+  let icon = '✓', title = 'Gespeichert', text = 'Der Eintrag ist im Google Sheet.', cls = 'ok';
+  if (!r.ok) {
+    cls = 'warn';
+    icon = '⏳';
+    title = 'Lokal gespeichert';
+    if (r.error === 'nocreds') {
+      text = 'Es ist noch keine Verbindung eingerichtet. Trag sie unter Einstellungen ein, dann wird der Eintrag nachgesendet.';
+    } else if (r.error === 'forbidden') {
+      text = 'Das Google Sheet hat das Passwort abgelehnt. Prüfe es unter Einstellungen. Der Eintrag wird nachgesendet.';
+    } else {
+      text = 'Gerade keine Verbindung. Der Eintrag wird automatisch gesendet, sobald du wieder online bist.';
+    }
+  }
+  return `
+  <div class="done ${cls}">
+    <div class="icon">${icon}</div>
+    <h2>${title}</h2>
+    <p>${text}</p>
+    <button class="primary" data-act="home">Fertig</button>
+  </div>`;
+}
+
+function viewSettings() {
+  const q = getQueue().length;
+  const url = (store.get('dw_url') || '').replace(/"/g, '&quot;');
+  const token = (store.get('dw_token') || '').replace(/"/g, '&quot;');
+  return `
+  <div class="top">
+    <button class="back" data-act="home">‹ Zurück</button>
+    <span class="count">Einstellungen</span>
+  </div>
+  <h2>Verbindung zum Google Sheet</h2>
+  <label class="field">Web-App-URL (endet auf /exec)
+    <input type="url" id="s-url" value="${url}" autocapitalize="off" autocorrect="off" spellcheck="false">
+  </label>
+  <label class="field">Geheimer Schlüssel
+    <input type="password" id="s-token" value="${token}" autocapitalize="off" autocorrect="off" spellcheck="false">
+  </label>
+  <button class="primary" data-act="savesettings">Speichern</button>
+  <div class="msg" id="s-msg"></div>
+  <p class="meta">${q === 0 ? 'Keine Einträge in der Warteschlange.' : (q === 1 ? '1 Eintrag wartet auf Versand.' : q + ' Einträge warten auf Versand.')}</p>
+  ${q > 0 ? '<div style="text-align:center"><button class="link" data-act="flush">Jetzt senden</button></div>' : ''}`;
+}
+
+function render() {
+  const app = document.getElementById('app');
+  const views = { home: viewHome, question: viewQuestion, summary: viewSummary, done: viewDone, settings: viewSettings };
+  app.innerHTML = views[state.screen]();
+  window.scrollTo(0, 0);
+}
+
+// ------------------------------------------------------------------
+// Navigation
+// ------------------------------------------------------------------
+function goNext() {
+  for (let i = state.step + 1; i < QUESTIONS.length; i++) {
+    if (isSkipped(i)) continue;
+    if (state.editing && state.answers[QUESTIONS[i].key] !== undefined) continue;
+    state.step = i;
+    state.screen = 'question';
+    return render();
+  }
+  state.editing = false;
+  state.screen = 'summary';
+  render();
+}
+
+function goBack() {
+  if (state.screen === 'summary') {
+    const active = activeIndices();
+    state.step = active[active.length - 1];
+    state.screen = 'question';
+    return render();
+  }
+  for (let i = state.step - 1; i >= 0; i--) {
+    if (isSkipped(i)) continue;
+    state.step = i;
+    return render();
+  }
+  if (Object.keys(state.answers).length === 0 || confirm('Eintrag verwerfen?')) {
+    state.screen = 'home';
+    render();
+  }
+}
+
+function readWhen() {
+  const d = document.getElementById('f-date');
+  const t = document.getElementById('f-time');
+  if (d && d.value) state.when.date = d.value;
+  if (t && t.value) state.when.time = t.value;
+}
+
+async function save(btn) {
+  readWhen();
+  const missing = activeIndices().filter(i => state.answers[QUESTIONS[i].key] === undefined);
+  if (missing.length) {
+    state.step = missing[0];
+    state.editing = true;
+    state.screen = 'question';
+    return render();
+  }
+  btn.disabled = true;
+  btn.textContent = 'Sende …';
+  const row = buildRow(state.answers, state.when.date, state.when.time);
+  const q = getQueue();
+  q.push(row);
+  setQueue(q);
+  const [y, m, d] = state.when.date.split('-');
+  store.set('dw_last', d + '.' + m + '.' + y + ', ' + state.when.time + ' Uhr');
+  state.result = await flushQueue();
+  state.answers = {};
+  state.screen = 'done';
+  render();
+}
+
+document.getElementById('app').addEventListener('click', async (ev) => {
+  const el = ev.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+
+  if (act === 'start') {
+    state = { screen: 'question', answers: {}, step: 0, editing: false, when: nowParts(), result: null };
+    render();
+  } else if (act === 'pick') {
+    const q = QUESTIONS[state.step];
+    const opt = q.options[Number(el.dataset.i)];
+    state.answers[q.key] = opt.v;
+    el.classList.add('sel');
+    setTimeout(goNext, 120);
+  } else if (act === 'back') {
+    if (state.screen === 'summary') readWhen();
+    goBack();
+  } else if (act === 'edit') {
+    readWhen();
+    state.step = Number(el.dataset.i);
+    state.editing = true;
+    state.screen = 'question';
+    render();
+  } else if (act === 'save') {
+    save(el);
+  } else if (act === 'cancel') {
+    if (confirm('Eintrag verwerfen?')) { state.answers = {}; state.screen = 'home'; render(); }
+  } else if (act === 'home') {
+    state.screen = 'home';
+    render();
+  } else if (act === 'settings') {
+    state.screen = 'settings';
+    render();
+  } else if (act === 'savesettings') {
+    const url = document.getElementById('s-url').value.trim();
+    const token = document.getElementById('s-token').value.trim();
+    const msg = document.getElementById('s-msg');
+    if (!url || !token) {
+      msg.className = 'msg err';
+      msg.textContent = 'Bitte beide Felder ausfüllen.';
+      return;
+    }
+    store.set('dw_url', url);
+    store.set('dw_token', token);
+    msg.className = 'msg ok';
+    msg.textContent = 'Gespeichert.';
+    if (getQueue().length) {
+      const r = await flushQueue();
+      if (r.ok) { render(); document.getElementById('s-msg').className = 'msg ok'; document.getElementById('s-msg').textContent = 'Gespeichert, Warteschlange gesendet.'; }
+    }
+  } else if (act === 'flush') {
+    el.disabled = true;
+    el.textContent = 'Sende …';
+    const r = await flushQueue();
+    render();
+    const msg = document.getElementById('s-msg');
+    msg.className = r.ok ? 'msg ok' : 'msg err';
+    msg.textContent = r.ok ? 'Alles gesendet.' : (r.error === 'forbidden' ? 'Schlüssel wurde abgelehnt.' : 'Senden fehlgeschlagen. Später nochmal versuchen.');
   }
 });
 
-document.getElementById('reset').addEventListener('click', () => {
-  localStorage.removeItem('dw_url');
-  localStorage.removeItem('dw_token');
-  statusEl.className = '';
-  statusEl.textContent = 'Zugangsdaten gelöscht. Beim nächsten Senden werden sie neu abgefragt.';
+// Wartende Einträge nachsenden: beim Start, wenn das Netz zurückkommt
+// und wenn die App wieder in den Vordergrund kommt.
+async function backgroundFlush() {
+  if (!getQueue().length || !hasCredentials()) return;
+  await flushQueue();
+  if (state.screen === 'home') render();
+}
+window.addEventListener('online', backgroundFlush);
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') backgroundFlush();
 });
+
+render();
+backgroundFlush();
 </script>
 </body>
 </html>
