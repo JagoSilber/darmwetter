@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Darmwetter">
+<title>Darmwetter</title>
+<style>
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #E8F3F2;
+    color: #1F4A4F;
+    font-family: -apple-system, "Helvetica Neue", sans-serif;
+  }
+  main { text-align: center; padding: 24px; width: 100%; max-width: 420px; box-sizing: border-box; }
+  h1 { font-size: 36px; margin: 0 0 8px; }
+  p.sub { margin: 0 0 32px; color: #2F6A70; }
+  button.big {
+    width: 100%;
+    padding: 22px;
+    font-size: 20px;
+    font-weight: 600;
+    color: #fff;
+    background: #2F5D62;
+    border: 0;
+    border-radius: 18px;
+  }
+  button.big:active { background: #1F4A4F; }
+  button.link {
+    margin-top: 28px;
+    background: none;
+    border: 0;
+    color: #2F6A70;
+    font-size: 14px;
+    text-decoration: underline;
+  }
+  #status { min-height: 48px; margin-top: 20px; font-size: 16px; }
+  .ok { color: #1B6E3A; }
+  .err { color: #B3261E; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Darmwetter</h1>
+  <p class="sub">Testversion: sendet eine Zeile an dein Google Sheet</p>
+  <button id="go" class="big">Testzeile senden</button>
+  <div id="status"></div>
+  <button id="reset" class="link">Zugangsdaten zurücksetzen</button>
+</main>
+
+<script>
+// Holt die Web-App-URL und den Schlüssel aus dem Speicher des Handys.
+// Beim allerersten Start fragt die App einmal danach.
+function getCredentials() {
+  if (!localStorage.getItem('dw_url')) {
+    const url = prompt('Web-App-URL einfügen (endet auf /exec):');
+    if (!url) return null;
+    localStorage.setItem('dw_url', url.trim());
+  }
+  if (!localStorage.getItem('dw_token')) {
+    const token = prompt('Geheimen Schlüssel eingeben:');
+    if (!token) return null;
+    localStorage.setItem('dw_token', token.trim());
+  }
+  return {
+    url: localStorage.getItem('dw_url'),
+    token: localStorage.getItem('dw_token')
+  };
+}
+
+// Schickt eine Zeile (eine Liste von Werten) ans Google Sheet.
+async function sendRow(row) {
+  const c = getCredentials();
+  if (!c) throw new Error('Keine Zugangsdaten eingegeben.');
+  const response = await fetch(c.url, {
+    method: 'POST',
+    body: JSON.stringify({ token: c.token, row: row })
+  });
+  const text = await response.text();
+  if (text !== 'ok') throw new Error('Antwort vom Sheet: ' + text);
+}
+
+function pad(n) { return String(n).padStart(2, '0'); }
+
+const statusEl = document.getElementById('status');
+
+document.getElementById('go').addEventListener('click', async () => {
+  const now = new Date();
+  const datum = now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate());
+  const zeit = pad(now.getHours()) + ':' + pad(now.getMinutes());
+  statusEl.className = '';
+  statusEl.textContent = 'Sende ...';
+  try {
+    // Reihenfolge wie im Google Sheet:
+    // Datum, Uhrzeit, Menge, Flatulenz, Farbe, Bristol-Typ, Blut,
+    // Schmerzintensität, Schmerzlage, Schmerzzeitpunkt, Schleim,
+    // Dringlichkeit, Inkontinenz, Tenesmus
+    await sendRow([datum, zeit, 0, 0, 'TEST', 4, 0, 0, 'diffus', 'unabhängig', 0, 0, 0, 0]);
+    statusEl.className = 'ok';
+    statusEl.textContent = 'Gesendet. Schau ins Google Sheet.';
+  } catch (err) {
+    statusEl.className = 'err';
+    statusEl.textContent = 'Fehler: ' + err.message;
+  }
+});
+
+document.getElementById('reset').addEventListener('click', () => {
+  localStorage.removeItem('dw_url');
+  localStorage.removeItem('dw_token');
+  statusEl.className = '';
+  statusEl.textContent = 'Zugangsdaten gelöscht. Beim nächsten Senden werden sie neu abgefragt.';
+});
+</script>
+</body>
+</html>
